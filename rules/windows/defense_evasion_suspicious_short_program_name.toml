@@ -1,10 +1,8 @@
 [metadata]
 creation_date = "2020/11/15"
-integration = ["endpoint", "windows"]
+integration = ["endpoint", "windows", "m365_defender", "crowdstrike"]
 maturity = "production"
-min_stack_comments = "New fields added: required_fields, related_integrations, setup"
-min_stack_version = "8.3.0"
-updated_date = "2024/03/08"
+updated_date = "2025/08/26"
 
 [transform]
 [[transform.osquery]]
@@ -31,13 +29,23 @@ services.path FROM services JOIN authenticode ON services.path = authenticode.pa
 authenticode.path JOIN hash ON services.path = hash.path WHERE authenticode.result != 'trusted'
 """
 
+
 [rule]
 author = ["Elastic"]
 description = """
-Identifies the execution of a process with a single character process name, differing from the original file name. This is often done by adversaries while staging, executing temporary utilities, or trying to bypass security detections based on the process name.
+Identifies the execution of a process with a single character process name, differing from the original file name. This
+is often done by adversaries while staging, executing temporary utilities, or trying to bypass security detections based
+on the process name.
 """
 from = "now-9m"
-index = ["winlogbeat-*", "logs-endpoint.events.*", "logs-windows.sysmon_operational-*", "endgame-*"]
+index = [
+    "winlogbeat-*",
+    "logs-endpoint.events.process-*",
+    "logs-windows.sysmon_operational-*",
+    "endgame-*",
+    "logs-m365_defender.event-*",
+    "logs-crowdstrike.fdr*",
+]
 language = "eql"
 license = "Elastic License v2"
 name = "Renamed Utility Executed with Short Program Name"
@@ -48,7 +56,7 @@ note = """## Triage and analysis
 Identifies the execution of a process with a single character process name, differing from the original file name. This is often done by adversaries while staging, executing temporary utilities, or trying to bypass security detections based on the process name.
 
 > **Note**:
-> This investigation guide uses the [Osquery Markdown Plugin](https://www.elastic.co/guide/en/security/master/invest-guide-run-osquery.html) introduced in Elastic Stack version 8.5.0. Older Elastic Stack versions will display unrendered Markdown in this guide.
+> This investigation guide uses the [Osquery Markdown Plugin](https://www.elastic.co/guide/en/security/current/invest-guide-run-osquery.html) introduced in Elastic Stack version 8.5.0. Older Elastic Stack versions will display unrendered Markdown in this guide.
 
 #### Possible investigation steps
 
@@ -92,7 +100,18 @@ Identifies the execution of a process with a single character process name, diff
 risk_score = 47
 rule_id = "17c7f6a5-5bc9-4e1f-92bf-13632d24384d"
 severity = "medium"
-tags = ["Domain: Endpoint", "OS: Windows", "Use Case: Threat Detection", "Tactic: Defense Evasion", "Data Source: Elastic Endgame", "Resources: Investigation Guide", "Data Source: Elastic Defend", "Data Source: Sysmon"]
+tags = [
+    "Domain: Endpoint",
+    "OS: Windows",
+    "Use Case: Threat Detection",
+    "Tactic: Defense Evasion",
+    "Data Source: Elastic Endgame",
+    "Data Source: Elastic Defend",
+    "Data Source: Sysmon",
+    "Data Source: Microsoft Defender for Endpoint",
+    "Data Source: Crowdstrike",
+    "Resources: Investigation Guide",
+]
 timestamp_override = "event.ingested"
 type = "eql"
 
@@ -110,7 +129,7 @@ name = "Masquerading"
 reference = "https://attack.mitre.org/techniques/T1036/"
 [[rule.threat.technique.subtechnique]]
 id = "T1036.003"
-name = "Rename System Utilities"
+name = "Rename Legitimate Utilities"
 reference = "https://attack.mitre.org/techniques/T1036/003/"
 
 

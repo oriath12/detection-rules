@@ -4,15 +4,20 @@
   "properties": {
     "actions": {
       "items": {
-        "type": [
-          "string",
-          "number",
-          "object",
-          "array",
-          "boolean"
-        ]
+        "additionalProperties": {
+          "type": [
+            "string",
+            "number",
+            "object",
+            "array",
+            "boolean"
+          ]
+        },
+        "type": "object"
       },
-      "type": "array"
+      "type": [
+        "array"
+      ]
     },
     "alert_suppression": {
       "additionalProperties": false,
@@ -30,10 +35,7 @@
               "type": "string"
             },
             "value": {
-              "description": "AlertSupressionValue",
-              "format": "integer",
-              "minimum": 1,
-              "type": "number"
+              "type": "integer"
             }
           },
           "required": [
@@ -43,23 +45,12 @@
           "type": "object"
         },
         "group_by": {
-          "description": "AlertSuppressionGroupBy",
           "items": {
-            "description": "NonEmptyStr",
-            "minLength": 1,
             "type": "string"
           },
-          "maxItems": 3,
-          "minItems": 1,
           "type": "array"
         },
         "missing_fields_strategy": {
-          "description": "AlertSuppressionMissing",
-          "enum": [
-            "suppress",
-            "doNotSuppress"
-          ],
-          "enumNames": [],
           "type": "string"
         }
       },
@@ -79,37 +70,46 @@
       "enum": [
         "default"
       ],
-      "type": "string"
+      "type": [
+        "string"
+      ]
     },
     "concurrent_searches": {
-      "description": "PositiveInteger",
-      "format": "integer",
-      "minimum": 1,
-      "type": "number"
+      "type": [
+        "integer"
+      ]
+    },
+    "data_view_id": {
+      "type": [
+        "string"
+      ]
     },
     "description": {
       "type": "string"
     },
     "enabled": {
-      "type": "boolean"
+      "type": [
+        "boolean"
+      ]
     },
     "exceptions_list": {
       "items": {
-        "type": [
-          "string",
-          "number",
-          "object",
-          "array",
-          "boolean"
-        ]
+        "additionalProperties": {
+          "type": "string"
+        },
+        "type": "object"
       },
-      "type": "array"
+      "type": [
+        "array"
+      ]
     },
     "false_positives": {
       "items": {
         "type": "string"
       },
-      "type": "array"
+      "type": [
+        "array"
+      ]
     },
     "filters": {
       "items": {
@@ -124,27 +124,47 @@
         },
         "type": "object"
       },
-      "type": "array"
+      "type": [
+        "array"
+      ]
     },
     "from": {
-      "type": "string"
+      "type": [
+        "string"
+      ]
     },
     "index": {
       "items": {
         "type": "string"
       },
-      "type": "array"
+      "type": [
+        "array"
+      ]
     },
     "interval": {
-      "description": "Interval",
-      "pattern": "^\\d+[mshd]$",
-      "type": "string"
+      "type": [
+        "string"
+      ]
+    },
+    "investigation_fields": {
+      "additionalProperties": false,
+      "properties": {
+        "field_names": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "field_names"
+      ],
+      "type": "object"
     },
     "items_per_search": {
-      "description": "PositiveInteger",
-      "format": "integer",
-      "minimum": 1,
-      "type": "number"
+      "type": [
+        "integer"
+      ]
     },
     "language": {
       "enum": [
@@ -157,13 +177,14 @@
       "type": "string"
     },
     "license": {
-      "type": "string"
+      "type": [
+        "string"
+      ]
     },
     "max_signals": {
-      "description": "MaxSignals",
-      "format": "integer",
-      "minimum": 1,
-      "type": "number"
+      "type": [
+        "integer"
+      ]
     },
     "meta": {
       "additionalProperties": {
@@ -175,16 +196,18 @@
           "boolean"
         ]
       },
-      "type": "object"
+      "type": [
+        "object"
+      ]
     },
     "name": {
-      "description": "RuleName",
-      "pattern": "^[a-zA-Z0-9].+?[a-zA-Z0-9()]$",
       "type": "string"
     },
     "note": {
-      "description": "MarkdownField",
-      "type": "string"
+      "description": "Markdown",
+      "type": [
+        "string"
+      ]
     },
     "query": {
       "type": "string"
@@ -193,25 +216,23 @@
       "items": {
         "type": "string"
       },
-      "type": "array"
+      "type": [
+        "array"
+      ]
     },
     "related_integrations": {
       "items": {
         "additionalProperties": false,
         "properties": {
           "integration": {
-            "description": "NonEmptyStr",
-            "minLength": 1,
-            "type": "string"
+            "type": [
+              "string"
+            ]
           },
           "package": {
-            "description": "NonEmptyStr",
-            "minLength": 1,
             "type": "string"
           },
           "version": {
-            "description": "NonEmptyStr",
-            "minLength": 1,
             "type": "string"
           }
         },
@@ -222,7 +243,9 @@
         "type": "object"
       },
       "min_compat": "8.3",
-      "type": "array"
+      "type": [
+        "array"
+      ]
     },
     "required_fields": {
       "items": {
@@ -232,13 +255,9 @@
             "type": "boolean"
           },
           "name": {
-            "description": "NonEmptyStr",
-            "minLength": 1,
             "type": "string"
           },
           "type": {
-            "description": "NonEmptyStr",
-            "minLength": 1,
             "type": "string"
           }
         },
@@ -250,14 +269,18 @@
         "type": "object"
       },
       "min_compat": "8.3",
-      "type": "array"
+      "type": [
+        "array"
+      ]
+    },
+    "revision": {
+      "min_compat": "8.8",
+      "type": [
+        "integer"
+      ]
     },
     "risk_score": {
-      "description": "MaxSignals",
-      "format": "integer",
-      "maximum": 100,
-      "minimum": 1,
-      "type": "number"
+      "type": "integer"
     },
     "risk_score_mapping": {
       "items": {
@@ -270,10 +293,14 @@
             "enum": [
               "equals"
             ],
-            "type": "string"
+            "type": [
+              "string"
+            ]
           },
           "value": {
-            "type": "string"
+            "type": [
+              "string"
+            ]
           }
         },
         "required": [
@@ -281,20 +308,24 @@
         ],
         "type": "object"
       },
-      "type": "array"
+      "type": [
+        "array"
+      ]
     },
     "rule_id": {
-      "description": "UUIDString",
-      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
       "type": "string"
     },
     "rule_name_override": {
-      "type": "string"
+      "type": [
+        "string"
+      ]
     },
     "setup": {
-      "description": "MarkdownField",
+      "description": "Markdown",
       "min_compat": "8.3",
-      "type": "string"
+      "type": [
+        "string"
+      ]
     },
     "severity": {
       "enum": [
@@ -317,13 +348,19 @@
             "enum": [
               "equals"
             ],
-            "type": "string"
+            "type": [
+              "string"
+            ]
           },
           "severity": {
-            "type": "string"
+            "type": [
+              "string"
+            ]
           },
           "value": {
-            "type": "string"
+            "type": [
+              "string"
+            ]
           }
         },
         "required": [
@@ -331,13 +368,17 @@
         ],
         "type": "object"
       },
-      "type": "array"
+      "type": [
+        "array"
+      ]
     },
     "tags": {
       "items": {
         "type": "string"
       },
-      "type": "array"
+      "type": [
+        "array"
+      ]
     },
     "threat": {
       "items": {
@@ -359,8 +400,6 @@
                 "type": "string"
               },
               "reference": {
-                "description": "TacticURL",
-                "pattern": "^https://attack.mitre.org/tactics/TA[0-9]+/$",
                 "type": "string"
               }
             },
@@ -382,8 +421,6 @@
                   "type": "string"
                 },
                 "reference": {
-                  "description": "TechniqueURL",
-                  "pattern": "^https://attack.mitre.org/techniques/T[0-9]+/$",
                   "type": "string"
                 },
                 "subtechnique": {
@@ -397,8 +434,6 @@
                         "type": "string"
                       },
                       "reference": {
-                        "description": "SubTechniqueURL",
-                        "pattern": "^https://attack.mitre.org/techniques/T[0-9]+/[0-9]+/$",
                         "type": "string"
                       }
                     },
@@ -409,7 +444,9 @@
                     ],
                     "type": "object"
                   },
-                  "type": "array"
+                  "type": [
+                    "array"
+                  ]
                 }
               },
               "required": [
@@ -419,7 +456,9 @@
               ],
               "type": "object"
             },
-            "type": "array"
+            "type": [
+              "array"
+            ]
           }
         },
         "required": [
@@ -428,7 +467,9 @@
         ],
         "type": "object"
       },
-      "type": "array"
+      "type": [
+        "array"
+      ]
     },
     "threat_filters": {
       "items": {
@@ -443,7 +484,9 @@
         },
         "type": "object"
       },
-      "type": "array"
+      "type": [
+        "array"
+      ]
     },
     "threat_index": {
       "items": {
@@ -452,7 +495,9 @@
       "type": "array"
     },
     "threat_indicator_path": {
-      "type": "string"
+      "type": [
+        "string"
+      ]
     },
     "threat_language": {
       "enum": [
@@ -462,7 +507,9 @@
         "lucene"
       ],
       "enumNames": [],
-      "type": "string"
+      "type": [
+        "string"
+      ]
     },
     "threat_mapping": {
       "items": {
@@ -473,8 +520,6 @@
               "additionalProperties": false,
               "properties": {
                 "field": {
-                  "description": "NonEmptyStr",
-                  "minLength": 1,
                   "type": "string"
                 },
                 "type": {
@@ -484,8 +529,6 @@
                   "type": "string"
                 },
                 "value": {
-                  "description": "NonEmptyStr",
-                  "minLength": 1,
                   "type": "string"
                 }
               },
@@ -507,56 +550,45 @@
       "type": "array"
     },
     "threat_query": {
-      "type": "string"
+      "type": [
+        "string"
+      ]
     },
     "throttle": {
-      "type": "string"
+      "type": [
+        "string"
+      ]
     },
     "timeline_id": {
-      "description": "TimelineTemplateId",
-      "enum": [
-        "db366523-f1c6-4c1f-8731-6ce5ed9e5717",
-        "91832785-286d-4ebe-b884-1a208d111a70",
-        "76e52245-7519-4251-91ab-262fb1a1728c",
-        "495ad7a7-316e-4544-8a0f-9c098daee76e",
-        "4d4c0b59-ea83-483f-b8c1-8c360ee53c5c",
-        "e70679c2-6cde-4510-9764-4823df18f7db",
-        "300afc76-072d-4261-864d-4149714bf3f1",
-        "3e47ef71-ebfc-4520-975c-cb27fc090799",
-        "3e827bab-838a-469f-bd1e-5e19a2bff2fd",
-        "4434b91a-94ca-4a89-83cb-a37cdc0532b7"
-      ],
-      "enumNames": [],
-      "type": "string"
+      "type": [
+        "string"
+      ]
     },
     "timeline_title": {
-      "description": "TimelineTemplateTitle",
-      "enum": [
-        "Generic Endpoint Timeline",
-        "Generic Network Timeline",
-        "Generic Process Timeline",
-        "Generic Threat Match Timeline",
-        "Comprehensive File Timeline",
-        "Comprehensive Process Timeline",
-        "Comprehensive Network Timeline",
-        "Comprehensive Registry Timeline",
-        "Alerts Involving a Single User Timeline",
-        "Alerts Involving a Single Host Timeline"
-      ],
-      "enumNames": [],
-      "type": "string"
+      "type": [
+        "string"
+      ]
     },
     "timestamp_override": {
-      "type": "string"
+      "type": [
+        "string"
+      ]
     },
     "to": {
-      "type": "string"
+      "type": [
+        "string"
+      ]
     },
     "type": {
       "enum": [
         "threat_match"
       ],
       "type": "string"
+    },
+    "version": {
+      "type": [
+        "integer"
+      ]
     }
   },
   "required": [

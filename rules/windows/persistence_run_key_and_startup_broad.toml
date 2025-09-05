@@ -2,9 +2,7 @@
 creation_date = "2020/11/18"
 integration = ["endpoint"]
 maturity = "production"
-min_stack_comments = "New fields added: required_fields, related_integrations, setup"
-min_stack_version = "8.3.0"
-updated_date = "2024/01/05"
+updated_date = "2025/05/08"
 
 [transform]
 [[transform.osquery]]
@@ -39,7 +37,7 @@ Identifies run key or startup key registry modifications. In order to survive re
 attackers will modify run keys within the registry or leverage startup folder items as a form of persistence.
 """
 from = "now-9m"
-index = ["logs-endpoint.events.*"]
+index = ["logs-endpoint.events.registry-*"]
 language = "eql"
 license = "Elastic License v2"
 name = "Startup or Run Key Registry Modification"
@@ -50,7 +48,7 @@ note = """## Triage and analysis
 Adversaries may achieve persistence by referencing a program with a registry run key. Adding an entry to the run keys in the registry will cause the program referenced to be executed when a user logs in. These programs will executed under the context of the user and will have the account's permissions. This rule looks for this behavior by monitoring a range of registry run keys.
 
 > **Note**:
-> This investigation guide uses the [Osquery Markdown Plugin](https://www.elastic.co/guide/en/security/master/invest-guide-run-osquery.html) introduced in Elastic Stack version 8.5.0. Older Elastic Stack versions will display unrendered Markdown in this guide.
+> This investigation guide uses the [Osquery Markdown Plugin](https://www.elastic.co/guide/en/security/current/invest-guide-run-osquery.html) introduced in Elastic Stack version 8.5.0. Older Elastic Stack versions will display unrendered Markdown in this guide.
 
 #### Possible investigation steps
 
@@ -100,17 +98,27 @@ Adversaries may achieve persistence by referencing a program with a registry run
 - Determine the initial vector abused by the attacker and take action to prevent reinfection through the same vector.
 - Using the incident response data, update logging and audit policies to improve the mean time to detect (MTTD) and the mean time to respond (MTTR).
 """
+references = ["https://www.elastic.co/security-labs/elastic-security-uncovers-blister-malware-campaign"]
 risk_score = 21
 rule_id = "97fc44d3-8dae-4019-ae83-298c3015600f"
 severity = "low"
-tags = ["Domain: Endpoint", "OS: Windows", "Use Case: Threat Detection", "Tactic: Persistence", "Resources: Investigation Guide", "Data Source: Elastic Endgame", "Data Source: Elastic Defend"]
+tags = [
+    "Domain: Endpoint",
+    "OS: Windows",
+    "Use Case: Threat Detection",
+    "Tactic: Persistence",
+    "Resources: Investigation Guide",
+    "Data Source: Elastic Endgame",
+    "Data Source: Elastic Defend",
+]
 timeline_id = "3e47ef71-ebfc-4520-975c-cb27fc090799"
 timeline_title = "Comprehensive Registry Timeline"
 timestamp_override = "event.ingested"
 type = "eql"
 
 query = '''
-registry where host.os.type == "windows" and registry.data.strings != null and
+registry where host.os.type == "windows" and event.type == "change" and 
+ registry.data.strings != null and registry.hive : ("HKEY_USERS", "HKLM") and
  registry.path : (
      /* Machine Hive */
      "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\*",
@@ -162,8 +170,9 @@ registry where host.os.type == "windows" and registry.data.strings != null and
           "\"?:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe\" --no-startup-window /prefetch:5"
         ) or
 
-        process.name : "GoogleUpdate.exe" and registry.data.strings : (
-          "\"?:\\Users\\*\\AppData\\Local\\Google\\Update\\*\\GoogleUpdateCore.exe\""
+        process.name : ("GoogleUpdate.exe", "updater.exe") and registry.data.strings : (
+          "\"?:\\Users\\*\\AppData\\Local\\Google\\Update\\*\\GoogleUpdateCore.exe\"",
+          "\"?:\\Users\\*\\AppData\\Local\\Google\\GoogleUpdater\\*\\updater.exe\" --wake"
         )
       )
     ) or
@@ -178,41 +187,37 @@ registry where host.os.type == "windows" and registry.data.strings != null and
           "\"C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe\" --no-startup-window --win-session-start"
         ) or
 
-        process.name : ("Update.exe", "Teams.exe") and registry.data.strings : (
+        process.name : ("Update.exe", "Teams.exe", "ms-teamsupdate.exe") and registry.data.strings : (
           "?:\\Users\\*\\AppData\\Local\\Microsoft\\Teams\\Update.exe --processStart \"Teams.exe\" --process-start-args \"--system-initiated\"",
-          "?:\\ProgramData\\*\\Microsoft\\Teams\\Update.exe --processStart \"Teams.exe\" --process-start-args \"--system-initiated\""
+          "?:\\ProgramData\\*\\Microsoft\\Teams\\Update.exe --processStart \"Teams.exe\" --process-start-args \"--system-initiated\"",
+          "ms-teamsupdate.exe -UninstallT20"
         ) or
 
-        process.name : "OneDriveStandaloneUpdater.exe" and registry.data.strings : (
-          "?:\\Users\\*\\AppData\\Local\\Microsoft\\OneDrive\\*\\Microsoft.SharePoint.exe"
-        ) or
-
-        process.name : "OneDriveSetup.exe" and
-          registry.data.strings : (
-            "?:\\Windows\\system32\\cmd.exe /q /c * \"?:\\Users\\*\\AppData\\Local\\Microsoft\\OneDrive\\*\"",
+        process.name : ("OneDrive*.exe", "Microsoft.SharePoint.exe") and registry.data.strings : (
+            "?:\\Program Files\\Microsoft OneDrive\\OneDrive.exe /background *",
             "?:\\Program Files (x86)\\Microsoft OneDrive\\OneDrive.exe /background*",
             "\"?:\\Program Files (x86)\\Microsoft OneDrive\\OneDrive.exe\" /background*",
-            "?:\\Program Files\\Microsoft OneDrive\\OneDrive.exe /background *",
-            "?:\\Users\\*\\AppData\\Local\\Microsoft\\OneDrive\\??.???.????.????\\Microsoft.SharePoint.exe"
-          ) or
-        
-        process.name : "OneDrive.exe" and registry.data.strings : (
-          "\"?:\\Program Files\\Microsoft OneDrive\\OneDrive.exe\" /background",
-          "\"?:\\Program Files (x86)\\Microsoft OneDrive\\OneDrive.exe\" /background",
-          "\"?:\\Users\\*\\AppData\\Local\\Microsoft\\OneDrive\\OneDrive.exe\" /background"
+            "\"?:\\Users\\*\\AppData\\Local\\Microsoft\\OneDrive\\OneDrive.exe\" /background",
+            "?:\\Users\\*\\AppData\\Local\\Microsoft\\OneDrive\\??.???.????.????\\Microsoft.SharePoint.exe",
+            "?:\\Windows\\system32\\cmd.exe /q /c * \"?:\\Users\\*\\AppData\\Local\\Microsoft\\OneDrive\\*\""
         ) or
-        
-        process.name : "Microsoft.SharePoint.exe" and registry.data.strings : (
-          "?:\\Users\\*\\AppData\\Local\\Microsoft\\OneDrive\\??.???.????.????\\Microsoft.SharePoint.exe"
-        ) or
-        
+
         process.name : "MicrosoftEdgeUpdate.exe" and registry.data.strings : (
-          "\"?:\\Users\\Expedient\\AppData\\Local\\Microsoft\\EdgeUpdate\\*\\MicrosoftEdgeUpdateCore.exe\""
+          "\"?:\\Users\\*\\AppData\\Local\\Microsoft\\EdgeUpdate\\*\\MicrosoftEdgeUpdateCore.exe\""
         ) or
         
         process.executable : "?:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\*\\Installer\\setup.exe" and
         registry.data.strings : (
           "\"?:\\Program Files (x86)\\Microsoft\\EdgeWebView\\Application\\*\\Installer\\setup.exe\" --msedgewebview --delete-old-versions --system-level --verbose-logging --on-logon"
+        ) or
+
+        process.name : "BingWallpaper.exe" and registry.data.strings : (
+          "C:\\Users\\*\\AppData\\Local\\Temp\\*\\UnInstDaemon.exe"
+        ) or
+
+        /* Discord Update.exe via reg.exe */
+        process.name : "reg.exe" and registry.data.strings : (
+          "\"C:\\Users\\*\\AppData\\Local\\Discord\\Update.exe\" --processStart Discord.exe"
         )
       )
     ) or
@@ -263,7 +268,8 @@ registry where host.os.type == "windows" and registry.data.strings != null and
 
     /* CCleaner */
     (
-      process.code_signature.trusted == true and process.code_signature.subject_name == "PIRIFORM SOFTWARE LIMITED" and
+      process.code_signature.trusted == true and
+      process.code_signature.subject_name in ("PIRIFORM SOFTWARE LIMITED", "Gen Digital Inc.") and
       process.name : ("CCleanerBrowser.exe", "CCleaner64.exe") and registry.data.strings : (
         "\"C:\\Program Files (x86)\\CCleaner Browser\\Application\\CCleanerBrowser.exe\" --check-run=src=logon --auto-launch-at-startup --profile-directory=\"Default\"",
         "\"C:\\Program Files\\CCleaner\\CCleaner64.exe\" /MONITOR"
@@ -273,9 +279,12 @@ registry where host.os.type == "windows" and registry.data.strings != null and
     /* Opera */
     (
       process.code_signature.trusted == true and process.code_signature.subject_name == "Opera Norway AS" and
-      process.name : "opera.exe" and registry.data.strings : (
+      process.name : ("opera.exe", "assistant_installer.exe") and registry.data.strings : (
         "?:\\Users\\*\\AppData\\Local\\Programs\\Opera\\launcher.exe",
-        "?:\\Users\\*\\AppData\\Local\\Programs\\Opera GX\\launcher.exe"
+        "?:\\Users\\*\\AppData\\Local\\Programs\\Opera\\opera.exe",
+        "?:\\Users\\*\\AppData\\Local\\Programs\\Opera GX\\launcher.exe",
+        "?:\\Users\\*\\AppData\\Local\\Programs\\Opera GX\\opera.exe",
+        "?:\\Users\\*\\AppData\\Local\\Programs\\Opera\\assistant\\browser_assistant.exe"
       )
     ) or
 
@@ -293,7 +302,49 @@ registry where host.os.type == "windows" and registry.data.strings != null and
     (
       process.code_signature.trusted == true and process.code_signature.subject_name == "Grammarly, Inc." and
       process.name : "GrammarlyInstaller.exe" and registry.data.strings : (
-        "?:\\Users\\*\\AppData\\Local\\Grammarly\\DesktopIntegrations\\Grammarly.Desktop.exe"
+        "?:\\Users\\*\\AppData\\Local\\Grammarly\\DesktopIntegrations\\Grammarly.Desktop.exe",
+        "\"?:\\Users\\*\\AppData\\Local\\Grammarly\\DesktopIntegrations\\Grammarly.Desktop.exe\""
+      )
+    ) or
+
+    /* AVG */
+    (
+      process.code_signature.trusted == true and process.code_signature.subject_name == "AVG Technologies USA, LLC" and
+      process.name : "AVGBrowser.exe" and registry.data.strings : (
+        "\"C:\\Program Files\\AVG\\Browser\\Application\\AVGBrowser.exe\"*",
+        "\"C:\\Users\\*\\AppData\\Local\\AVG\\Browser\\Application\\AVGBrowser.exe\"*"
+      )
+    ) or
+
+    /* HP */
+    (
+      process.code_signature.trusted == true and process.code_signature.subject_name == "HP Inc." and
+      process.name : "ScanToPCActivationApp.exe" and registry.data.strings : (
+        "\"C:\\Program Files\\HP\\HP*"
+      )
+    ) or
+
+    /* 1Password */
+    (
+      process.code_signature.trusted == true and process.code_signature.subject_name == "Agilebits" and
+      process.name : "1PasswordSetup*.exe" and registry.data.strings : (
+        "\"C:\\Users\\*\\AppData\\Local\\1Password\\app\\?\\1Password.exe\" --silent"
+      )
+    ) or
+
+    /* OpenVPN */
+    (
+      process.code_signature.trusted == true and process.code_signature.subject_name == "OpenVPN Inc." and
+      process.name : "OpenVPNConnect.exe" and registry.data.strings : (
+        "C:\\Program Files\\OpenVPN Connect\\OpenVPNConnect.exe --opened-at-login --minimize"
+      )
+    ) or
+
+    /* Docker */
+    (
+      process.code_signature.trusted == true and process.code_signature.subject_name == "Docker Inc" and
+      process.name: "com.docker.backend.exe" and registry.data.strings : (
+        "C:\\Program Files\\Docker\\Docker\\Docker Desktop.exe -Autostart"
       )
     )
   )

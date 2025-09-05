@@ -1,10 +1,8 @@
 [metadata]
 creation_date = "2020/09/02"
-integration = ["endpoint", "windows"]
+integration = ["endpoint", "windows", "crowdstrike"]
 maturity = "production"
-min_stack_comments = "New fields added: required_fields, related_integrations, setup"
-min_stack_version = "8.3.0"
-updated_date = "2024/03/08"
+updated_date = "2025/08/26"
 
 [transform]
 [[transform.osquery]]
@@ -31,6 +29,7 @@ services.path FROM services JOIN authenticode ON services.path = authenticode.pa
 authenticode.path JOIN hash ON services.path = hash.path WHERE authenticode.result != 'trusted'
 """
 
+
 [rule]
 author = ["Elastic"]
 description = """
@@ -38,7 +37,7 @@ Identifies child processes of unusual instances of RunDLL32 where the command li
 RunDLL32 could indicate malicious activity.
 """
 from = "now-60m"
-index = ["logs-endpoint.events.*", "winlogbeat-*", "logs-windows.sysmon_operational-*"]
+index = ["logs-endpoint.events.process-*", "winlogbeat-*", "logs-windows.sysmon_operational-*", "logs-crowdstrike.fdr*"]
 interval = "30m"
 language = "eql"
 license = "Elastic License v2"
@@ -52,7 +51,7 @@ By examining the specific traits of Windows binaries -- such as process trees, c
 RunDLL32 is a legitimate Windows utility used to load and execute functions within dynamic-link libraries (DLLs). However, adversaries may abuse RunDLL32 to execute malicious code, bypassing security measures and evading detection. This rule identifies potential abuse by looking for an unusual process creation with no arguments followed by the creation of a child process.
 
 > **Note**:
-> This investigation guide uses the [Osquery Markdown Plugin](https://www.elastic.co/guide/en/security/master/invest-guide-run-osquery.html) introduced in Elastic Stack version 8.5.0. Older Elastic Stack versions will display unrendered Markdown in this guide.
+> This investigation guide uses the [Osquery Markdown Plugin](https://www.elastic.co/guide/en/security/current/invest-guide-run-osquery.html) introduced in Elastic Stack version 8.5.0. Older Elastic Stack versions will display unrendered Markdown in this guide.
 
 ### Possible investigation steps
 
@@ -102,14 +101,25 @@ RunDLL32 is a legitimate Windows utility used to load and execute functions with
 risk_score = 73
 rule_id = "f036953a-4615-4707-a1ca-dc53bf69dcd5"
 severity = "high"
-tags = ["Domain: Endpoint", "OS: Windows", "Use Case: Threat Detection", "Tactic: Defense Evasion", "Data Source: Elastic Defend", "Data Source: Sysmon"]
+tags = [
+    "Domain: Endpoint",
+    "OS: Windows",
+    "Use Case: Threat Detection",
+    "Tactic: Defense Evasion",
+    "Data Source: Elastic Defend",
+    "Data Source: Sysmon",
+    "Data Source: Crowdstrike",
+    "Resources: Investigation Guide",
+]
 type = "eql"
 
 query = '''
 sequence with maxspan=1h
   [process where host.os.type == "windows" and event.type == "start" and
      (process.name : "rundll32.exe" or process.pe.original_file_name == "RUNDLL32.EXE") and
-      process.args_count == 1
+      (process.args_count == 1 and
+        /* Excludes bug where a missing closing quote sets args_count to 1 despite extra args */
+        not process.command_line regex~ """\".*\.exe[^\"].*""")
   ] by process.entity_id
   [process where host.os.type == "windows" and event.type == "start" and process.parent.name : "rundll32.exe"
   ] by process.parent.entity_id
